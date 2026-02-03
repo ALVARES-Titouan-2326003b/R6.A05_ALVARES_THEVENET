@@ -13,6 +13,9 @@ class Response
     #[ORM\Column]
     private ?int $id = null;
 
+    #[ORM\Column(nullable: false)]
+    private ?int $id_question = null;
+
     #[ORM\Column(length: 255)]
     private ?string $question = null;
 
@@ -26,6 +29,18 @@ class Response
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getIdQuestion(): ?int
+    {
+        return $this->id_question;
+    }
+
+    public function setIdQuestion(string $id_question): static
+    {
+        $this->id_question = $id_question;
+
+        return $this;
     }
 
     public function getQuestion(): ?string

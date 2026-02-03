@@ -6,6 +6,7 @@ use App\Repository\QcmRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use App\Entity\Type;
 
 #[ORM\Entity(repositoryClass: QcmRepository::class)]
 class Qcm
@@ -20,6 +21,14 @@ class Qcm
 
     #[ORM\Column(length: 255)]
     private ?string $description = null;
+
+    #[ORM\Column(type: "string", nullable: false, enumType: Type::class)]
+    private ?Type $type = Type::VIDEO;
+
+    #[ORM\Column(length: 255)]
+    private ?string $path = null;
+
+
 
     /**
      * @var Collection<int, Response>
@@ -57,6 +66,31 @@ class Qcm
     public function setDescription(string $description): static
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getType(): Type
+    {
+        return $this->type;
+    }
+
+    public function setType(string $type): static
+    {
+        $this->description = $type;
+
+        return $this;
+    }
+
+
+    public function getPath(): ?string
+    {
+        return $this->path;
+    }
+
+    public function setPath(string $path): static
+    {
+        $this->description = $path;
 
         return $this;
     }
