@@ -1,0 +1,274 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Espace Professeur - EduLearn{% endblock %}
+
+{% block body %}
+    <!-- HERO SECTION PROFESSEUR -->
+    <div class="hero" style="background: linear-gradient(135deg, #10b981, #059669);">
+        <div class="container">
+            <h1>🎓 Espace Professeur</h1>
+            <p>Gérez vos cours, uploadez des ressources et créez des QCM générés par IA</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ videos|length }}</div>
+                    <div class="stat-label">Vidéos en ligne</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ documents|length }}</div>
+                    <div class="stat-label">Documents PDF</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ videos|length + documents|length }}</div>
+                    <div class="stat-label">Ressources totales</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <!-- MESSAGES FLASH -->
+        {% for message in app.flashes('success') %}
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                ✅ {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+        {% for message in app.flashes('error') %}
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                ❌ {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+
+        <!-- CAROUSEL VIDÉOS AVEC BOUTON UPLOAD -->
+        <div class="card mb-5">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">📹 Vidéos de Cours</h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadVideoModal">
+                            ➕ Upload Vidéo
+                        </button>
+                        <div class="carousel-controls">
+                            <button class="carousel-btn" onclick="scrollCarousel('videos-carousel', -320)">←</button>
+                            <button class="carousel-btn" onclick="scrollCarousel('videos-carousel', 320)">→</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row flex-nowrap overflow-auto pb-3" id="videos-carousel" style="scroll-behavior: smooth;">
+                    {% if videos is empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <p class="mb-0">Aucune vidéo disponible. Uploadez votre première vidéo ! 🎬</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        {% for video in videos %}
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                                <div class="card h-100">
+                                    <!-- Thumbnail vidéo -->
+                                    <div class="carousel-item-video position-relative">
+                                        🎬
+                                        <div class="position-absolute" style="width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--primary);">
+                                            ▶
+                                        </div>
+                                    </div>
+
+                                    <!-- Contenu -->
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold">{{ video.title }}</h5>
+                                        <p class="card-text text-muted small mb-3">
+                                            {{ video.description|length > 80 ? video.description|slice(0, 80) ~ '...' : video.description }}
+                                        </p>
+
+                                        <!-- Boutons d'action -->
+                                        <button class="btn btn-success-custom mb-2" onclick="generateQCM('video', {{ video.id }})">
+                                            🤖 Générer QCM
+                                        </button>
+
+                                        <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteResource('video', {{ video.id }}, '{{ video.title }}')">
+                                            🗑️ Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- CAROUSEL DOCUMENTS AVEC BOUTON UPLOAD -->
+        <div class="card mb-5">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">📄 Documents de Cours</h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#uploadPdfModal">
+                            ➕ Upload PDF
+                        </button>
+                        <div class="carousel-controls">
+                            <button class="carousel-btn" onclick="scrollCarousel('documents-carousel', -320)">←</button>
+                            <button class="carousel-btn" onclick="scrollCarousel('documents-carousel', 320)">→</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row flex-nowrap overflow-auto pb-3" id="documents-carousel" style="scroll-behavior: smooth;">
+                    {% if documents is empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <p class="mb-0">Aucun document disponible. Uploadez votre premier PDF ! 📄</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        {% for document in documents %}
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                                <div class="card h-100">
+                                    <!-- Thumbnail document -->
+                                    <div class="carousel-item-document">
+                                        📑
+                                    </div>
+
+                                    <!-- Contenu -->
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold">{{ document.title }}</h5>
+                                        <p class="card-text text-muted small mb-3">
+                                            {{ document.description|length > 80 ? document.description|slice(0, 80) ~ '...' : document.description }}
+                                        </p>
+
+                                        <!-- Boutons d'action -->
+                                        <button class="btn btn-success-custom mb-2" onclick="generateQCM('document', {{ document.id }})">
+                                            🤖 Générer QCM
+                                        </button>
+
+                                        <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteResource('document', {{ document.id }}, '{{ document.title }}')">
+                                            🗑️ Supprimer
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL UPLOAD VIDÉO -->
+    <div class="modal fade" id="uploadVideoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                    <h5 class="modal-title">📹 Upload une Vidéo</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ path('app_teacher_upload_video') }}" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="video_title" class="form-label fw-bold">Titre de la vidéo *</label>
+                            <input type="text" class="form-control" id="video_title" name="title" required placeholder="Ex: Introduction à Symfony">
+                        </div>
+                        <div class="mb-3">
+                            <label for="video_description" class="form-label fw-bold">Description *</label>
+                            <textarea class="form-control" id="video_description" name="description" rows="3" required placeholder="Décrivez le contenu de la vidéo..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="video_file" class="form-label fw-bold">Fichier vidéo *</label>
+                            <input type="file" class="form-control" id="video_file" name="video_file" accept="video/*" required>
+                            <div class="form-text">Formats acceptés : MP4, AVI, MOV (max 500MB)</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-success">📤 Uploader</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL UPLOAD PDF -->
+    <div class="modal fade" id="uploadPdfModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #f093fb, #f5576c); color: white;">
+                    <h5 class="modal-title">📄 Upload un Document PDF</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ path('app_teacher_upload_pdf') }}" method="post" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="pdf_title" class="form-label fw-bold">Titre du document *</label>
+                            <input type="text" class="form-control" id="pdf_title" name="title" required placeholder="Ex: Support de cours - Doctrine ORM">
+                        </div>
+                        <div class="mb-3">
+                            <label for="pdf_description" class="form-label fw-bold">Description *</label>
+                            <textarea class="form-control" id="pdf_description" name="description" rows="3" required placeholder="Décrivez le contenu du document..."></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="pdf_file" class="form-label fw-bold">Fichier PDF *</label>
+                            <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept=".pdf" required>
+                            <div class="form-text">Format accepté : PDF uniquement (max 50MB)</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-success">📤 Uploader</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+
+    <script>
+        // Fonction pour faire défiler les carrousels
+        function scrollCarousel(id, amount) {
+            const carousel = document.getElementById(id);
+            carousel.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        // Fonction pour générer un QCM (Professeur)
+        function generateQCM(type, id) {
+            const confirmMsg = `Voulez-vous générer un QCM automatique pour ce ${type === 'video' ? 'vidéo' : 'document'} ?`;
+
+            if (confirm(confirmMsg)) {
+                const btn = event.target;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '⏳ Génération...';
+                btn.disabled = true;
+
+                // Simulation - à remplacer par un vrai appel AJAX
+                setTimeout(() => {
+                    btn.innerHTML = '✅ QCM Créé !';
+                    btn.classList.remove('btn-success-custom');
+                    btn.classList.add('btn-success');
+
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-success-custom');
+                    }, 2000);
+
+                    alert('QCM généré avec succès ! 🎉\n\n• 10 questions créées\n• Difficulté progressive\n• Disponible pour les étudiants');
+                }, 2000);
+            }
+        }
+
+        // Fonction pour supprimer une ressource
+        function deleteResource(type, id, title) {
+            const confirmMsg = `⚠️ Êtes-vous sûr de vouloir supprimer "${title}" ?\n\nCette action est irréversible.`;
+
+            if (confirm(confirmMsg)) {
+                alert('🗑️ Suppression en cours...\n\nLa ressource sera supprimée dans quelques instants.');
+                // À implémenter : vraie suppression via AJAX
+            }
+        }
+    </script>
+{% endblock %}
