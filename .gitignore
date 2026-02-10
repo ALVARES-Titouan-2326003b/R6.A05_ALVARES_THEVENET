@@ -71,4 +71,10 @@
 
 # Embedded web-server pid file
 /.web-server-pid
+
+
 /migrations/
+/public/uploads/documents/*
+/public/uploads/videos/*
+!/public/uploads/documents/.gitignore
+!/public/uploads/videos/.gitignore
