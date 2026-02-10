@@ -1,0 +1,234 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil - EduLearn{% endblock %}
+
+{% block body %}
+    <!-- HERO SECTION -->
+    <div class="hero">
+        <div class="container">
+            <h1>Plateforme d'Apprentissage Moderne</h1>
+            <p>Accédez à vos cours, regardez des vidéos, consultez des documents et passez des QCM générés par IA</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-number">150+</div>
+                    <div class="stat-label">Cours disponibles</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">2,500+</div>
+                    <div class="stat-label">Étudiants actifs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">98%</div>
+                    <div class="stat-label">Taux de satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container my-5">
+        <!-- CAROUSEL VIDÉOS -->
+        <div class="card mb-5">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">📹 Vidéos de Cours</h2>
+                    <div class="carousel-controls">
+                        <button class="carousel-btn" onclick="scrollCarousel('videos-carousel', -320)">←</button>
+                        <button class="carousel-btn" onclick="scrollCarousel('videos-carousel', 320)">→</button>
+                    </div>
+                </div>
+
+                <div class="row flex-nowrap overflow-auto pb-3" id="videos-carousel" style="scroll-behavior: smooth;">
+                    {% if videos is empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <p class="mb-0">Aucune vidéo disponible pour le moment.</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        {% for video in videos %}
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                                <div class="card h-100">
+                                    <!-- Thumbnail vidéo -->
+                                    <div class="carousel-item-video position-relative">
+                                        🎬
+                                        <div class="position-absolute" style="width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--primary);">
+                                            ▶
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Contenu -->
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold">{{ video.title }}</h5>
+                                        <p class="card-text text-muted small mb-3">
+                                            {{ video.description|length > 80 ? video.description|slice(0, 80) ~ '...' : video.description }}
+                                        </p>
+                                        
+                                        <!-- Boutons d'action -->
+                                        {% if is_granted('ROLE_TEACHER') %}
+                                            <button class="btn btn-success-custom mb-2" onclick="generateQCM('video', {{ video.id }})">
+                                                🤖 Générer QCM (Prof)
+                                            </button>
+                                        {% endif %}
+                                        
+                                        <a href="#" class="btn btn-primary-custom" onclick="takeQCM(event, '{{ video.title }}')">
+                                            ✏️ Passer le QCM
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- CAROUSEL DOCUMENTS -->
+        <div class="card mb-5">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">📄 Documents de Cours</h2>
+                    <div class="carousel-controls">
+                        <button class="carousel-btn" onclick="scrollCarousel('documents-carousel', -320)">←</button>
+                        <button class="carousel-btn" onclick="scrollCarousel('documents-carousel', 320)">→</button>
+                    </div>
+                </div>
+
+                <div class="row flex-nowrap overflow-auto pb-3" id="documents-carousel" style="scroll-behavior: smooth;">
+                    {% if documents is empty %}
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <p class="mb-0">Aucun document disponible pour le moment.</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        {% for document in documents %}
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                                <div class="card h-100">
+                                    <!-- Thumbnail document -->
+                                    <div class="carousel-item-document">
+                                        📑
+                                    </div>
+                                    
+                                    <!-- Contenu -->
+                                    <div class="card-body">
+                                        <h5 class="card-title fw-bold">{{ document.title }}</h5>
+                                        <p class="card-text text-muted small mb-3">
+                                            {{ document.description|length > 80 ? document.description|slice(0, 80) ~ '...' : document.description }}
+                                        </p>
+                                        
+                                        <!-- Boutons d'action -->
+                                        {% if is_granted('ROLE_TEACHER') %}
+                                            <button class="btn btn-success-custom mb-2" onclick="generateQCM('document', {{ document.id }})">
+                                                🤖 Générer QCM (Prof)
+                                            </button>
+                                        {% endif %}
+                                        
+                                        <a href="#" class="btn btn-primary-custom" onclick="takeQCM(event, '{{ document.title }}')">
+                                            ✏️ Passer le QCM
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION RÉSULTATS (optionnel, à garder pour plus tard) -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="mb-0">📊 Mes Résultats</h2>
+                    <button class="btn btn-success" onclick="exportResults()">
+                        📥 Exporter en CSV
+                    </button>
+                </div>
+
+                <div class="alert alert-info text-center">
+                    <p class="mb-0">Vous n'avez pas encore passé de QCM. Commencez dès maintenant ! 🚀</p>
+                </div>
+
+                {# Table des résultats - à implémenter plus tard
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>QCM</th>
+                                <th>Date</th>
+                                <th>Score</th>
+                                <th>Note</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="5" class="text-center py-4">
+                                    Aucun résultat disponible
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                #}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    
+    <script>
+        // Fonction pour faire défiler les carrousels
+        function scrollCarousel(id, amount) {
+            const carousel = document.getElementById(id);
+            carousel.scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        // Fonction pour générer un QCM (Professeur)
+        function generateQCM(type, id) {
+            const confirmMsg = `Voulez-vous générer un QCM automatique pour ce ${type === 'video' ? 'vidéo' : 'document'} ?`;
+            
+            if (confirm(confirmMsg)) {
+                // Animation de chargement
+                const btn = event.target;
+                const originalHTML = btn.innerHTML;
+                btn.innerHTML = '⏳ Génération...';
+                btn.disabled = true;
+                
+                // Simulation - à remplacer par un vrai appel AJAX
+                setTimeout(() => {
+                    btn.innerHTML = '✅ QCM Créé !';
+                    btn.classList.remove('btn-success-custom');
+                    btn.classList.add('btn-success');
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.disabled = false;
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-success-custom');
+                    }, 2000);
+                    
+                    alert('QCM généré avec succès ! 🎉\n\n• 10 questions créées\n• Difficulté progressive\n• Disponible pour les étudiants');
+                }, 2000);
+            }
+        }
+
+        // Fonction pour passer un QCM (Étudiant)
+        function takeQCM(event, courseName) {
+            event.preventDefault();
+            
+            alert(`🎓 Démarrage du QCM : ${courseName}\n\n✓ 10 questions\n✓ Durée : 20 minutes\n✓ Note sur 20\n\nBonne chance ! 🍀`);
+            
+            // Simulation - à remplacer par une vraie redirection
+            // window.location.href = '/qcm/' + qcmId + '/start';
+        }
+
+        // Fonction pour exporter les résultats
+        function exportResults() {
+            alert('Export CSV en cours... 📥\n\nLes résultats seront téléchargés dans quelques secondes.');
+            // À implémenter : vraie exportation CSV
+        }
+    </script>
+{% endblock %}
