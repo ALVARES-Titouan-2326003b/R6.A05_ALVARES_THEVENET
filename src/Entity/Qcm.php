@@ -6,7 +6,6 @@ use App\Repository\QcmRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use App\Entity\Type;
 
 #[ORM\Entity(repositoryClass: QcmRepository::class)]
 class Qcm
