@@ -89,7 +89,7 @@ class Qcm
 
     public function setPath(string $path): static
     {
-        $this->description = $path;
+        $this->path = $path;
 
         return $this;
     }

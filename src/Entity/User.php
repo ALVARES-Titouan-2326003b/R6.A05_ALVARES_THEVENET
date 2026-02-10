@@ -22,16 +22,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $email = null;
 
     /**
-     * @var list<string> The user roles
-     */
-    #[ORM\Column]
-    private array $roles = [];
-
-    /**
      * @var string The hashed password
      */
     #[ORM\Column]
     private ?string $password = null;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $teacher = false;
 
     public function getId(): ?int
     {
@@ -65,21 +62,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getRoles(): array
     {
-        $roles = $this->roles;
-        // guarantee every user at least has ROLE_USER
-        $roles[] = 'ROLE_USER';
-
-        return array_unique($roles);
-    }
-
-    /**
-     * @param list<string> $roles
-     */
-    public function setRoles(array $roles): static
-    {
-        $this->roles = $roles;
-
-        return $this;
+        // Retournez un rôle par défaut
+        return ['ROLE_USER'];
     }
 
     /**
@@ -93,6 +77,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setPassword(string $password): static
     {
         $this->password = $password;
+
+        return $this;
+    }
+
+    public function getTeacher(): bool
+    {
+        return $this->teacher;
+    }
+
+    public function setTeacher(bool $teacher): static
+    {
+        $this->teacher = $teacher;
 
         return $this;
     }
