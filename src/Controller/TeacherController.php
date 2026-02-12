@@ -11,7 +11,6 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 
@@ -20,6 +19,10 @@ class TeacherController extends AbstractController
     #[Route('/teacher', name: 'app_teacher_home')]
     public function index(QcmRepository $qcmRepository): Response
     {
+        if (!$this->isGranted('IS_TEACHER')) {
+            return $this->redirectToRoute('app_home');
+        }
+
         // Récupérer les vidéos
         $videos = $qcmRepository->findBy(['type' => Type::VIDEO]);
 
