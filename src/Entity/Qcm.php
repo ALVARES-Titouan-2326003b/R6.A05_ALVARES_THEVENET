@@ -76,7 +76,7 @@ class Qcm
 
     public function setType(string $type): static
     {
-        $this->description = $type;
+        $this->type = Type::from($type);
 
         return $this;
     }
