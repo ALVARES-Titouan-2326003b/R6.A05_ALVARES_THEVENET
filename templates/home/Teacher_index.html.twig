@@ -40,7 +40,7 @@
             </div>
         {% endfor %}
 
-        <!-- CAROUSEL VIDÉOS AVEC BOUTON UPLOAD -->
+        <!-- CAROUSEL VIDÉOS -->
         <div class="card mb-5">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -65,9 +65,8 @@
                         </div>
                     {% else %}
                         {% for video in videos %}
-                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3" id="qcm-{{ video.id }}">
                                 <div class="card h-100">
-                                    <!-- Thumbnail vidéo -->
                                     <div class="carousel-item-video position-relative">
                                         🎬
                                         <div class="position-absolute" style="width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--primary);">
@@ -75,19 +74,17 @@
                                         </div>
                                     </div>
 
-                                    <!-- Contenu -->
                                     <div class="card-body">
                                         <h5 class="card-title fw-bold">{{ video.title }}</h5>
                                         <p class="card-text text-muted small mb-3">
                                             {{ video.description|length > 80 ? video.description|slice(0, 80) ~ '...' : video.description }}
                                         </p>
 
-                                        <!-- Boutons d'action -->
                                         <button class="btn btn-success-custom mb-2" onclick="generateQCM('video', {{ video.id }})">
                                             🤖 Générer QCM
                                         </button>
 
-                                        <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteResource('video', {{ video.id }}, '{{ video.title }}')">
+                                        <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteResource({{ video.id }})">
                                             🗑️ Supprimer
                                         </button>
                                     </div>
@@ -99,7 +96,7 @@
             </div>
         </div>
 
-        <!-- CAROUSEL DOCUMENTS AVEC BOUTON UPLOAD -->
+        <!-- CAROUSEL DOCUMENTS -->
         <div class="card mb-5">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -124,26 +121,23 @@
                         </div>
                     {% else %}
                         {% for document in documents %}
-                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3">
+                            <div class="col-12 col-md-6 col-lg-4 col-xl-3 mb-3" id="qcm-{{ document.id }}">
                                 <div class="card h-100">
-                                    <!-- Thumbnail document -->
                                     <div class="carousel-item-document">
                                         📑
                                     </div>
 
-                                    <!-- Contenu -->
                                     <div class="card-body">
                                         <h5 class="card-title fw-bold">{{ document.title }}</h5>
                                         <p class="card-text text-muted small mb-3">
                                             {{ document.description|length > 80 ? document.description|slice(0, 80) ~ '...' : document.description }}
                                         </p>
 
-                                        <!-- Boutons d'action -->
                                         <button class="btn btn-success-custom mb-2" onclick="generateQCM('document', {{ document.id }})">
                                             🤖 Générer QCM
                                         </button>
 
-                                        <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteResource('document', {{ document.id }}, '{{ document.title }}')">
+                                        <button class="btn btn-outline-danger btn-sm w-100" onclick="deleteResource({{ document.id }})">
                                             🗑️ Supprimer
                                         </button>
                                     </div>
@@ -227,13 +221,11 @@
     {{ parent() }}
 
     <script>
-        // Fonction pour faire défiler les carrousels
         function scrollCarousel(id, amount) {
             const carousel = document.getElementById(id);
             carousel.scrollBy({ left: amount, behavior: 'smooth' });
         }
 
-        // Fonction pour générer un QCM (Professeur)
         function generateQCM(type, id) {
             const confirmMsg = `Voulez-vous générer un QCM automatique pour ce ${type === 'video' ? 'vidéo' : 'document'} ?`;
 
@@ -243,7 +235,6 @@
                 btn.innerHTML = '⏳ Génération...';
                 btn.disabled = true;
 
-                // Simulation - à remplacer par un vrai appel AJAX
                 setTimeout(() => {
                     btn.innerHTML = '✅ QCM Créé !';
                     btn.classList.remove('btn-success-custom');
@@ -261,13 +252,59 @@
             }
         }
 
-        // Fonction pour supprimer une ressource
-        function deleteResource(type, id, title) {
-            const confirmMsg = `⚠️ Êtes-vous sûr de vouloir supprimer "${title}" ?\n\nCette action est irréversible.`;
+        // ✅ SUPPRESSION DIRECTE - Pas de pop-ups
+        async function deleteResource(id) {
+            const card = document.getElementById(`qcm-${id}`);
 
-            if (confirm(confirmMsg)) {
-                alert('🗑️ Suppression en cours...\n\nLa ressource sera supprimée dans quelques instants.');
-                // À implémenter : vraie suppression via AJAX
+            if (!card) return;
+
+            // Animation immédiate
+            card.style.transition = 'all 0.3s ease';
+            card.style.opacity = '0.5';
+            card.style.pointerEvents = 'none';
+
+            try {
+                const response = await fetch(`/teacher/delete/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Animation de disparition
+                    card.style.transform = 'scale(0.8)';
+                    card.style.opacity = '0';
+
+                    setTimeout(() => {
+                        card.remove();
+
+                        // Vérifier si le carrousel est vide
+                        const carousel = card.closest('.row');
+                        if (carousel && carousel.querySelectorAll('[id^="qcm-"]').length === 0) {
+                            carousel.innerHTML = `
+                                <div class="col-12">
+                                    <div class="alert alert-info text-center">
+                                        <p class="mb-0">Aucune ressource disponible.</p>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    }, 300);
+                } else {
+                    // En cas d'erreur, restaurer
+                    console.error('Erreur:', data.message);
+                    card.style.opacity = '1';
+                    card.style.pointerEvents = 'auto';
+                }
+
+            } catch (error) {
+                console.error('Erreur:', error);
+                // Restaurer en cas d'erreur réseau
+                card.style.opacity = '1';
+                card.style.pointerEvents = 'auto';
             }
         }
     </script>

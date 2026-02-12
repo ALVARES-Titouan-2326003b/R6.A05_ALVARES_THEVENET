@@ -109,4 +109,43 @@ class TeacherController extends AbstractController
 
         return $this->redirectToRoute('app_teacher_home');
     }
+
+    #[Route('/teacher/delete/{id}', name: 'app_teacher_delete', methods: ['DELETE'])]
+    public function delete(
+        int $id,
+        QcmRepository $qcmRepository,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $qcm = $qcmRepository->find($id);
+
+            if (!$qcm) {
+                return new JsonResponse([
+                    'success' => false,
+                    'message' => 'Ressource non trouvée'
+                ], 404);
+            }
+
+            // Supprimer le fichier physique
+            $filePath = $this->getParameter('kernel.project_dir').'/public'.$qcm->getPath();
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+
+            // Supprimer de la base de données
+            $entityManager->remove($qcm);
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Ressource supprimée avec succès'
+            ]);
+
+        } catch (\Exception $e) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Erreur lors de la suppression : '.$e->getMessage()
+            ], 500);
+        }
+    }
 }
